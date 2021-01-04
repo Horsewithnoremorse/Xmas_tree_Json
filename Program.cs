@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Xmas_tree_Json
 {
@@ -17,17 +18,17 @@ namespace Xmas_tree_Json
             var options = new JsonSerializerOptions();
             options.PropertyNameCaseInsensitive = true;
 
-            var xmasProducts = JsonSerializer.Deserialize<products>(jsonString, options);
-
+            //var xmasProducts = JsonSerializer.Deserialize<products>(jsonString, options);
+            var xmasProducts = JsonConvert.DeserializeObject<products>(jsonString);
             foreach (var product in xmasProducts.Products)
             {
-                product.prices.price_min.amountD = product.prices.price_min.MyConvertToDouble();
-                Console.WriteLine($"{product.full_name} {product.prices.price_min.amountD}");
+                product.Prices.Price_min.CashInDouble = product.Prices.Price_min.MyConvertToDouble();
+                Console.WriteLine($"{product.Name} {product.Prices.Price_min.CashInDouble}");
                 
             }
             Console.ReadLine();
 
-            //Deshman(xmasProducts);
+            Deshman(xmasProducts);
             //GiftForTescha(xmasProducts);
             //AwesomeGiftToMYself(xmasProducts);
             //GiftDeshman50BYN(xmasProducts);
@@ -42,55 +43,54 @@ namespace Xmas_tree_Json
         {
             //вариант для илитки
             Console.WriteLine("Вот шо есть по дешману");
-            var selectedProducts = products.Products.Where(x => x.prices.price_min.amountD < 10.00);
+            var selectedProducts = products.Products.Where(x => x.Prices.Price_min.CashInDouble < 10.00).ToList();
+            int index = 0;
             foreach (var product in selectedProducts)
             {
-                Console.WriteLine($"{product.full_name} {product.prices.price_min.amountD}");
+                Console.WriteLine($"{index}) {product.Name} {product.Prices.Price_min.CashInDouble}");
+                index++;
             }
-            //вариант для бидла)
-            //foreach (var product in Products.Products)
-            //{
-            //    if (product.prices.price_min.amountD < 10.00)
-            //    {
-            //        Console.WriteLine($"{product.full_name} {product.prices.price_min.amountD}");
-            //    }
-            //}
+            SelectMenu(selectedProducts);            
             Console.ReadLine();
         }
 
         static void GiftForTescha(products products)
         {
             Console.WriteLine("Вот шо есть для любимой тещеньки");
-            var teschaGift = products.Products.OrderBy(x => x.prices.price_min.amountD).First();            
-            Console.WriteLine($" {teschaGift.full_name} {teschaGift.prices.price_min.amount}");            
+            var teschaGift = products.Products.OrderBy(x => x.Prices.Price_min.CashInDouble).First();            
+            Console.WriteLine($" {teschaGift.Name} {teschaGift.Prices.Price_min.CashInString}");
+            GetSite(teschaGift);
             Console.ReadLine();
         }
         static void AwesomeGiftToMYself(products products)
         {
             Console.WriteLine("Вот шо есть для меня любимого");
-            var myself = products.Products.OrderBy(x => x.prices.price_min.amountD).Last();
-            Console.WriteLine($" {myself.full_name} {myself.prices.price_min.amount}");
+            var myself = products.Products.OrderBy(x => x.Prices.Price_min.CashInDouble).Last();
+            Console.WriteLine($" {myself.Name} {myself.Prices.Price_min.CashInString}");
+            GetSite(myself);
             Console.ReadLine();
         }
         static void GiftDeshman50BYN(products products)
         {
             Console.WriteLine("выбрать самые дешевые подарки пока не закончатся 50 рублей, вывести список подарков");
-            var ordered =  products.Products.OrderBy(x => x.prices.price_min.amountD).ToList();  
+            var ordered =  products.Products.OrderBy(x => x.Prices.Price_min.CashInDouble).ToList();  
             double summCost = 0.00;
             var Deshman50Byn = new List<Product>();
             int i = 0;
-            while ((50.00-summCost) > ordered[i].prices.price_min.amountD)
+            while ((50.00-summCost) > ordered[i].Prices.Price_min.CashInDouble)
             {
-                summCost += ordered[i].prices.price_min.amountD;
+                summCost += ordered[i].Prices.Price_min.CashInDouble;
                 Deshman50Byn.Add(ordered[i]);
                 i++;
             }
 
             foreach (var product in Deshman50Byn)
             {
-                Console.WriteLine($" {product.full_name} {product.prices.price_min.amountD}");
-            }            
+                Console.WriteLine($" {product.Name} {product.Prices.Price_min.CashInDouble}");
+            }
+            SelectMenu(Deshman50Byn);
             Console.ReadLine();
+            
         }
 
         static void GiftRandom80BYN(products products)
@@ -100,21 +100,21 @@ namespace Xmas_tree_Json
             var Random80Byn = new List<Product>();
             int i = 0;
             Random random = new Random();
-            while ((80.00 - summCost) >= products.Products.Min(x => x.prices.price_min.amountD))
+            while ((80.00 - summCost) >= products.Products.Min(x => x.Prices.Price_min.CashInDouble))
             {
                 i = random.Next(products.Products.Count);
-                if (80.00 > summCost + products.Products[i].prices.price_min.amountD)
+                if (80.00 > summCost + products.Products[i].Prices.Price_min.CashInDouble)
                 {
-                    summCost += products.Products[i].prices.price_min.amountD;
+                    summCost += products.Products[i].Prices.Price_min.CashInDouble;
                     Random80Byn.Add(products.Products[i]);
-                }
-                
+                }                
             }
             Console.WriteLine($"игого потрачено {summCost:00.00}, даж вывел кросево");
             foreach (var product in Random80Byn)
             {
-                Console.WriteLine($" {product.full_name} {product.prices.price_min.amountD}");
+                Console.WriteLine($" {product.Name} {product.Prices.Price_min.CashInDouble}");
             }
+            SelectMenu(Random80Byn);
             Console.ReadLine();
         }
         static void GiftGetAllCost(products products)
@@ -123,7 +123,7 @@ namespace Xmas_tree_Json
             double summCost = 0.00;
             foreach (var product in products.Products)
             {
-                summCost += product.prices.price_min.amountD;
+                summCost += product.Prices.Price_min.CashInDouble;
             }
             Console.WriteLine($"за все {summCost:00.00}, даж вывел кросево");
 
@@ -135,9 +135,9 @@ namespace Xmas_tree_Json
             double summCost = 0.00;
             foreach (var product in products.Products)
             {
-                if (product.prices.price_min.amountD < 40.00)
+                if (product.Prices.Price_min.CashInDouble < 40.00)
                 {
-                    summCost += product.prices.price_min.amountD;
+                    summCost += product.Prices.Price_min.CashInDouble;
 
                 }
             }
@@ -150,12 +150,47 @@ namespace Xmas_tree_Json
             Console.WriteLine("вывести список подарков с ценой до 25 рублей");
             foreach (var product in products.Products)
             {
-                if (product.prices.price_min.amountD < 25.00)
+                if (product.Prices.Price_min.CashInDouble < 25.00)
                 {
-                    Console.WriteLine($" {product.full_name} {product.prices.price_min.amountD}");
+                    Console.WriteLine($" {product.Name} {product.Prices.Price_min.CashInDouble}");
                 }
             }
             Console.ReadLine();
+        }
+        static void GetSite(Product product)
+        {
+            Console.WriteLine("зайти на сайт ? y / n");
+            while (true)
+            {
+                string response = Console.ReadLine();
+                if (response == "y")
+                {
+                    Console.WriteLine($"тады вот вам ссылка {product.Url}");
+                    //System.Diagnostics.Process.Start(product.Url);
+                    break;
+                }
+                else if (response == "n") { break; }
+                else { Console.WriteLine("Некорректный ввод"); }
+            }
+        }
+        static void SelectMenu(List<Product> products)
+        {
+            while (true)
+            {
+                Console.WriteLine("Выберите номер товара который вас интересует");
+                string input = Console.ReadLine();
+                int selIndex = 0;
+                bool result = int.TryParse(input, out selIndex);
+                if (result != true) { Console.WriteLine("Какую то фигню вместо индекса вводите"); }
+                if (selIndex >= products.Count) { Console.WriteLine("чет индекс слишком большой"); continue; }
+                Console.WriteLine($"Выбранный товар {products[selIndex].Name}");
+                GetSite(products[selIndex]);
+                Console.WriteLine("Желаете продолжить? y/n");
+                string response = Console.ReadLine();
+                if (response == "y") { }
+                else if (response == "n") { break; }
+                else { Console.WriteLine("Некорректный ввод"); }
+            }
         }
     }
 }
