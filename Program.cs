@@ -6,6 +6,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace Xmas_tree_Json
 {
@@ -28,7 +29,61 @@ namespace Xmas_tree_Json
             }
             Console.ReadLine();
 
-            Deshman(xmasProducts);
+            //кароч тут для все с запросами DB и мы ленивые и ебанули перегрузку
+            //FillProductsDB(xmasProducts);
+            //Deshman();
+            GiftForTescha();
+
+            static void FillProductsDB(products products)
+            {
+                using (var context = new ProductDbContext())
+                {
+                    foreach (var product in products.Products)
+                    {
+                        context.ProductDBList.Add(new ProductDB()
+                        {
+                            Name = product.Name,
+                            Price = product.Prices.Price_min.CashInDouble,
+                            Url = product.Url
+                        });
+                    }
+                    
+                  
+                    context.SaveChanges();
+                }
+            }
+            static void Deshman()
+            {
+                Console.WriteLine("Вот шо есть по дешману");
+                using (var context = new ProductDbContext())
+                {                    
+                    var selectedProducts = context
+                        .ProductDBList.Where(x => x.Price < 10.00).ToList();
+                    foreach (var product in selectedProducts)
+                    {
+                        Console.WriteLine($"{product.Id} {product.Name}  {product.Price}  ");
+                    }
+                    SelectMenu(selectedProducts);
+                }
+                
+            }
+            static void GiftForTescha()
+            {
+                Console.WriteLine("Вот шо есть для любимой тещеньки");
+                using (var context = new ProductDbContext())
+                {
+                    var teschaGift = context
+                        .ProductDBList.OrderBy(x => x.Price).First();
+                    Console.WriteLine($" {teschaGift.Name} {teschaGift.Price}");
+                    GetSite(teschaGift);
+                    Console.ReadLine();
+                }
+                
+            }
+
+            //кароч тут для JSON без DB
+
+            //Deshman(xmasProducts);
             //GiftForTescha(xmasProducts);
             //AwesomeGiftToMYself(xmasProducts);
             //GiftDeshman50BYN(xmasProducts);
@@ -53,7 +108,6 @@ namespace Xmas_tree_Json
             SelectMenu(selectedProducts);            
             Console.ReadLine();
         }
-
         static void GiftForTescha(products products)
         {
             Console.WriteLine("Вот шо есть для любимой тещеньки");
@@ -92,7 +146,6 @@ namespace Xmas_tree_Json
             Console.ReadLine();
             
         }
-
         static void GiftRandom80BYN(products products)
         {
             Console.WriteLine("выбрать случайные подарки покупая всё пока не закончатся 80 рублей - вывести список подарков");            
@@ -157,6 +210,7 @@ namespace Xmas_tree_Json
             }
             Console.ReadLine();
         }
+
         static void GetSite(Product product)
         {
             Console.WriteLine("зайти на сайт ? y / n");
@@ -173,6 +227,23 @@ namespace Xmas_tree_Json
                 else { Console.WriteLine("Некорректный ввод"); }
             }
         }
+        static void GetSite(ProductDB product)
+        {
+            Console.WriteLine("зайти на сайт ? y / n");
+            while (true)
+            {
+                string response = Console.ReadLine();
+                if (response == "y")
+                {
+                    Console.WriteLine($"тады вот вам ссылка {product.Url}");
+                    //System.Diagnostics.Process.Start(product.Url);
+                    break;
+                }
+                else if (response == "n") { break; }
+                else { Console.WriteLine("Некорректный ввод"); }
+            }
+        }
+
         static void SelectMenu(List<Product> products)
         {
             while (true)
@@ -185,6 +256,25 @@ namespace Xmas_tree_Json
                 if (selIndex >= products.Count) { Console.WriteLine("чет индекс слишком большой"); continue; }
                 Console.WriteLine($"Выбранный товар {products[selIndex].Name}");
                 GetSite(products[selIndex]);
+                Console.WriteLine("Желаете продолжить? y/n");
+                string response = Console.ReadLine();
+                if (response == "y") { }
+                else if (response == "n") { break; }
+                else { Console.WriteLine("Некорректный ввод"); }
+            }
+        }
+        static void SelectMenu(List<ProductDB> products)
+        {
+            while (true)
+            {
+                Console.WriteLine("Выберите номер товара который вас интересует");
+                string input = Console.ReadLine();
+                int selIndex = 1;
+                bool result = int.TryParse(input, out selIndex);
+                if (result != true) { Console.WriteLine("Какую то фигню вместо индекса вводите"); }
+                //if (selIndex >= products.Count) { Console.WriteLine("чет индекс слишком большой"); continue; }
+                Console.WriteLine($"Выбранный товар {products.Where(x => x.Id == selIndex).FirstOrDefault().Name}");
+                GetSite(products.Where(x => x.Id == selIndex).FirstOrDefault());
                 Console.WriteLine("Желаете продолжить? y/n");
                 string response = Console.ReadLine();
                 if (response == "y") { }
