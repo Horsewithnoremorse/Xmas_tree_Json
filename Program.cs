@@ -32,7 +32,13 @@ namespace Xmas_tree_Json
             //кароч тут для все с запросами DB и мы ленивые и ебанули перегрузку
             //FillProductsDB(xmasProducts);
             //Deshman();
-            GiftForTescha();
+            //GiftForTescha();
+            //AwesomeGiftToMYself();
+            //GiftDeshman50BYN();
+            //GiftRandom80BYN();
+            //GiftGetAllCost();
+            //GiftGetAllCostLess40Byn();
+            GiftGetAll25Byn();
 
             static void FillProductsDB(products products)
             {
@@ -79,6 +85,118 @@ namespace Xmas_tree_Json
                     Console.ReadLine();
                 }
                 
+            }
+            static void AwesomeGiftToMYself()
+            {
+                Console.WriteLine("Вот шо есть для меня любимого");
+                using (var context = new ProductDbContext() )
+                {
+                    var myself = context.ProductDBList.OrderBy(x => x.Price).Last();
+                    Console.WriteLine($" {myself.Name} {myself.Price}");
+                    GetSite(myself);
+                    Console.ReadLine();
+                }                    
+            }
+            static void GiftDeshman50BYN()
+            {
+                Console.WriteLine("выбрать самые дешевые подарки пока не закончатся 50 рублей, вывести список подарков");
+                using (var context = new ProductDbContext())
+                {
+                    var ordered = context.ProductDBList.OrderBy(x => x.Price).ToList();
+                    double summCost = 0.00;
+                    var Deshman50Byn = new List<ProductDB>();
+                    int i = 0;
+                    while ((50.00 - summCost) > ordered[i].Price)
+                    {
+                        summCost += ordered[i].Price;
+                        Deshman50Byn.Add(ordered[i]);
+                        i++;
+                    }
+                    foreach (var product in Deshman50Byn)
+                    {
+                        Console.WriteLine($"{product.Id}  {product.Name}  {product.Price}");
+                    }
+                    SelectMenu(Deshman50Byn);
+                    Console.ReadLine();
+                }            
+            }
+            static void GiftRandom80BYN()
+            {
+                Console.WriteLine("выбрать случайные подарки покупая всё пока не закончатся 80 рублей - вывести список подарков");
+                using (var context = new ProductDbContext())
+                {
+                    double summCost = 0.00;
+                    var Random80Byn = new List<ProductDB>();
+                    int randomId = 1;
+                    Random random = new Random();
+                    while ((80.00 - summCost) >= context.ProductDBList.Min(x => x.Price))
+                    {
+                        randomId = random.Next(1,context.ProductDBList.Count());
+                        if (80.00 > summCost + context.ProductDBList.Where(x=>x.Id == randomId).First().Price)
+                        {
+                            summCost += context.ProductDBList.Where(x => x.Id == randomId).First().Price;
+                            Random80Byn.Add(context.ProductDBList.Where(x => x.Id == randomId).First());
+                        }
+                    }
+                    Console.WriteLine($"игого потрачено {summCost:00.00}, даж вывел кросево");
+                    foreach (var product in Random80Byn)
+                    {
+                        Console.WriteLine($"{product.Id}  {product.Name}  {product.Price}");
+                    }
+                    SelectMenu(Random80Byn);
+                    Console.ReadLine();
+                }
+                    
+            }
+            static void GiftGetAllCost()
+            {
+                Console.WriteLine("посчитать сколько будут стоить все подарки");
+                using (var context = new ProductDbContext())
+                {
+                    double summCost = 0.00;
+                    foreach (var product in context.ProductDBList)
+                    {
+                        summCost += product.Price;
+                    }
+                    Console.WriteLine($"за все {summCost:00.00}, даж вывел кросево");
+
+                    Console.ReadLine();
+                }                
+            }
+            static void GiftGetAllCostLess40Byn()
+            {
+                Console.WriteLine("посчитать сколько будут стоить все подарки с ценой до 40 рублей");
+                using (var context = new ProductDbContext())
+                {
+                    double summCost = 0.00;
+                    foreach (var product in context.ProductDBList)
+                    {
+                        if (product.Price < 40.00)
+                        {
+                            summCost += product.Price;
+
+                        }
+                    }
+                    Console.WriteLine($"за все {summCost:00.00}, даж вывел кросево");
+
+                    Console.ReadLine();
+                }
+                    
+            }
+            static void GiftGetAll25Byn()
+            {
+                Console.WriteLine("вывести список подарков с ценой до 25 рублей");
+                using (var context = new ProductDbContext())
+                {
+                    foreach (var product in context.ProductDBList)
+                    {
+                        if (product.Price < 25.00)
+                        {
+                            Console.WriteLine($"{product.Id} {product.Name} {product.Price}");
+                        }
+                    }
+                    Console.ReadLine();
+                }                    
             }
 
             //кароч тут для JSON без DB
@@ -271,7 +389,7 @@ namespace Xmas_tree_Json
                 string input = Console.ReadLine();
                 int selIndex = 1;
                 bool result = int.TryParse(input, out selIndex);
-                if (result != true) { Console.WriteLine("Какую то фигню вместо индекса вводите"); }
+                if (result != true) { Console.WriteLine("Какую то фигню вместо индекса вводите"); continue; }
                 //if (selIndex >= products.Count) { Console.WriteLine("чет индекс слишком большой"); continue; }
                 Console.WriteLine($"Выбранный товар {products.Where(x => x.Id == selIndex).FirstOrDefault().Name}");
                 GetSite(products.Where(x => x.Id == selIndex).FirstOrDefault());
